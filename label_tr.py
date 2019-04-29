@@ -10,6 +10,7 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 
 # change working directory
 os.chdir('D:\\Ruonan\\Projects in the lab\\VA_RA_PTB\\Imaging analysis\\imaging_analysis_inpython_041719\\ra_ptsd_inPython\\')
@@ -137,47 +138,78 @@ sv_sal = data['sv_label_sal']
 
 #%% create mask and labels for a subject, all functional runs
 
+sub_list = [1063, 1069,1072,115,1206,1208,1216,1244,1266,1273,1284,1291,1304,1305,1309,1325,1340,1344,1345,1346,30,38,53,56,58,60,75,83,95,96,99,105,1074,110,119,1205,120,1232,1237,1245,125,1280,1285,1338,1350,45,50,82,85,87,88,93,98]
+sub_list = [1232,1237,1245,125,1280,1285,1338,1350,45,50,82,85,87,88,93,98]
+
+sub_list = [1072, 1206, 1244, 1291, 1305, 45, 82, 125, 1237, 1280]
 # read events for a single run
-events = readConditions(mat_filename,)
-# read events for all (8) runs
-total_event = organizeBlocks(1069, fitpar_dir)
+# events = readConditions(mat_filename,)
+# read events for all (8) run
 
-# products: label of the whole 500 trs, mask of trs to take out the 6 TR duration
-tr_mask = [] # each list element is a run, length should equals to 500
-sv_val_label = []
-sv_sal_label = []
-sv = []
 
-for event_run in total_event:
-    sv_run = np.zeros(500)
-    tr_mask_run = np.zeros(500)
-    sv_val_label_run = np.zeros(500)
-    sv_sal_label_run = np.zeros(500)
+for sub_num in sub_list:
     
-    # onsets in TR
-    onset = event_run.onset
+                      
+    total_event = organizeBlocks(sub_num, fitpar_dir)
     
-    # create mask
-    for tr_delta in range(0,event_run.loc[1, 'duration']):
-        tr_mask_run[onset+tr_delta] = 1
-        sv_run[onset+tr_delta] = event_run.loc[:,'sv']
-        sv_val_label_run[onset+tr_delta] = event_run.loc[:, 'sv_label_val']
-        sv_sal_label_run[onset+tr_delta] = event_run.loc[:, 'sv_label_sal']
+    # products: label of the whole 500 trs, mask of trs to take out the 6 TR duration
+    tr_mask = [] # each list element is a run, length should equals to 500
+    sv_val_label = []
+    sv_sal_label = []
+    sv = []
     
-    tr_mask.append(tr_mask_run)    
-    sv.append(sv_run)
-    sv_val_label.append(sv_val_label_run)
-    sv_sal_label.append(sv_sal_label_run)
-
-
-# check by plotting    
-plt.plot(tr_mask[0])
-
-plt.plot(sv_val_label[0][tr_mask[0]==1])
-plt.plot(sv_sal_label[0][tr_mask[0]==1])     
-plt.plot(sv[0][tr_mask[0]==1])  
-                   
+    for event_run in total_event:
+        sv_run = np.zeros(500)
+        tr_mask_run = np.zeros(500)
+        sv_val_label_run = np.zeros(500)
+        sv_sal_label_run = np.zeros(500)
         
+        # onsets in TR
+        onset = event_run.onset
+        
+        # create mask
+        for tr_delta in range(0,event_run.loc[1, 'duration']):
+            tr_mask_run[onset+tr_delta] = 1
+            sv_run[onset+tr_delta] = event_run.loc[:,'sv']
+            sv_val_label_run[onset+tr_delta] = event_run.loc[:, 'sv_label_val']
+            sv_sal_label_run[onset+tr_delta] = event_run.loc[:, 'sv_label_sal']
+        
+        tr_mask.append(tr_mask_run)    
+        sv.append(sv_run)
+        sv_val_label.append(sv_val_label_run)
+        sv_sal_label.append(sv_sal_label_run)
+    
+    # save 
+    sub_path = 'D:\\Ruonan\\Projects in the lab\\VA_RA_PTB\\Analysis Ruonan\\trial labels\\sub-%s' %sub_num
+    if not os.path.exists(sub_path):
+        os.makedirs(sub_path)
+    os.chdir(sub_path)
+    
+    with open('sub-%s_event.txt' %sub_num, 'wb') as fp:
+        pickle.dump(total_event, fp)
+        
+    with open('sub-%s_tr_mask.txt' %sub_num, 'wb') as fp:
+        pickle.dump(tr_mask, fp)
+        
+    with open('sub-%s_sv.txt' %sub_num, 'wb') as fp:
+        pickle.dump(sv, fp)
+        
+    with open('sub-%s_sv_val_label.txt' %sub_num, 'wb') as fp:
+        pickle.dump(sv_val_label, fp)
+        
+    with open('sub-%s_sv_sal_label.txt' %sub_num, 'wb') as fp:
+        pickle.dump(sv_sal_label, fp)
+        
+    #with open('sub-%s_tr_mask.txt' %sub_num, 'rb') as fp:
+     #   tr_mask_test = pickle.load(fp)
+    
+    
+    # check by plotting    
+    # plt.plot(tr_mask[0])
+    # plt.plot(sv_val_label[0][tr_mask[0]==1])
+    # plt.plot(sv_sal_label[0][tr_mask[0]==1])     
+    # plt.plot(sv[0][tr_mask[0]==1])  
+                            
                    
     
     
